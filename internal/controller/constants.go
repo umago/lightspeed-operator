@@ -112,13 +112,15 @@ const (
 
 	// -- LCore specific ---------------------------------------------------------
 
-	LlamaStackContainerPort  = int32(8321)
-	LlamaStackConfigCmName   = "llama-stack-config"
-	LCoreConfigCmName        = "lightspeed-stack-config"
-	LCoreDeploymentName      = "lightspeed-stack-deployment"
-	LCoreConfigMountPath     = "/app-root/lightspeed-stack.yaml"
-	LCoreUserDataMountPath   = "/tmp/data"
-	ForceReloadAnnotationKey = "ols.openshift.io/force-reload"
+	LlamaStackContainerPort   = int32(8321)
+	LlamaStackConfigCmName    = "llama-stack-config"
+	LCoreConfigCmName         = "lightspeed-stack-config"
+	LCoreDeploymentName       = "lightspeed-stack-deployment"
+	LCoreConfigMountPath      = "/app-root/lightspeed-stack.yaml"
+	LCoreUserDataMountPath    = "/tmp/data"
+	LlamaStackFilesVolumeName = "llama-stack-files"
+	LlamaStackFilesMountPath  = "/tmp/llama-stack-files"
+	ForceReloadAnnotationKey  = "ols.openshift.io/force-reload"
 
 	// ---------------------------------------------------------------------------
 

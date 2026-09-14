@@ -130,12 +130,26 @@ func buildOKPPodTemplateSpec(instance *apiv1beta1.OpenStackLightspeed) corev1.Po
 				},
 			},
 			AutomountServiceAccountToken: toPtr(false),
+			Volumes: []corev1.Volume{
+				{
+					Name: TmpVolumeName,
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
+					},
+				},
+			},
 			Containers: []corev1.Container{
 				{
 					Name:  OKPContainerName,
 					Image: apiv1beta1.OpenStackLightspeedDefaultValues.OKPImageURL,
 					Ports: []corev1.ContainerPort{{Name: "okp", ContainerPort: OKPContainerPort}},
 					Env:   envVars,
+					VolumeMounts: []corev1.VolumeMount{
+						{
+							Name:      TmpVolumeName,
+							MountPath: TmpVolumeMountPath,
+						},
+					},
 					ReadinessProbe: &corev1.Probe{
 						ProbeHandler: corev1.ProbeHandler{
 							HTTPGet: &corev1.HTTPGetAction{

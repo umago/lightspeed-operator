@@ -114,6 +114,7 @@ func buildConsoleDeploymentSpec(consoleImage string, instance *apiv1beta1.OpenSt
 						SecurityContext: &corev1.SecurityContext{
 							AllowPrivilegeEscalation: toPtr(false),
 							RunAsNonRoot:             toPtr(true),
+							ReadOnlyRootFilesystem:   toPtr(true),
 							Capabilities: &corev1.Capabilities{
 								Drop: []corev1.Capability{"ALL"},
 							},

@@ -59,6 +59,22 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 	}
 	lsEnvVars := buildLightspeedStackEnvVars(instance)
 
+	// Writable volumes for read-only root filesystem containers
+	volumes = append(volumes,
+		corev1.Volume{
+			Name: TmpVolumeName,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		corev1.Volume{
+			Name: LlamaStackFilesVolumeName,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+	)
+
 	// Llama Stack container mounts: its config + shared + cache + vector_store_db data
 	llamaStackMounts := []corev1.VolumeMount{}
 	llamaStackMounts = append(llamaStackMounts, sharedMounts...)
@@ -68,10 +84,15 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 		MountPath: VectorDBScriptsMountPath,
 		ReadOnly:  true,
 	})
+	llamaStackMounts = append(llamaStackMounts,
+		corev1.VolumeMount{Name: TmpVolumeName, MountPath: TmpVolumeMountPath},
+		corev1.VolumeMount{Name: LlamaStackFilesVolumeName, MountPath: LlamaStackFilesMountPath},
+	)
 
 	containerSecurityContext := &corev1.SecurityContext{
 		RunAsNonRoot:             toPtr(true),
 		AllowPrivilegeEscalation: toPtr(false),
+		ReadOnlyRootFilesystem:   toPtr(true),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{"ALL"},
 		},
@@ -136,6 +157,11 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 	addTLSVolumesAndMounts(&volumes, &tlsMounts, VolumeDefaultMode)
 	lightspeedStackMounts = append(lightspeedStackMounts, tlsMounts...)
 
+	lightspeedStackMounts = append(lightspeedStackMounts, corev1.VolumeMount{
+		Name:      TmpVolumeName,
+		MountPath: TmpVolumeMountPath,
+	})
+
 	// Mount shared data folder on lightspeed-service-api for feedback/transcripts
 	if dataCollectionEnabled {
 		lightspeedStackMounts = append(lightspeedStackMounts, corev1.VolumeMount{
@@ -188,6 +214,10 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 					SubPath:   CABundleKey,
 					ReadOnly:  true,
 				},
+				{
+					Name:      TmpVolumeName,
+					MountPath: TmpVolumeMountPath,
+				},
 			},
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
@@ -211,6 +241,11 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 	if rhosoMCPEnabled {
 		mcpMounts := []corev1.VolumeMount{}
 		addMCPVolumesAndMounts(&volumes, &mcpMounts)
+
+		mcpMounts = append(mcpMounts, corev1.VolumeMount{
+			Name:      TmpVolumeName,
+			MountPath: TmpVolumeMountPath,
+		})
 
 		mcpContainer := corev1.Container{
 			Name:         "rhoso-mcps",
@@ -282,6 +317,7 @@ func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources
 	securityContext := &corev1.SecurityContext{
 		RunAsNonRoot:             toPtr(true),
 		AllowPrivilegeEscalation: toPtr(false),
+		ReadOnlyRootFilesystem:   toPtr(true),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{"ALL"},
 		},
@@ -307,6 +343,10 @@ func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources
 				Name:      VectorDBScriptsVolumeName,
 				MountPath: VectorDBScriptsMountPath,
 				ReadOnly:  true,
+			},
+			{
+				Name:      TmpVolumeName,
+				MountPath: TmpVolumeMountPath,
 			},
 		},
 	})
@@ -347,6 +387,10 @@ func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources
 				Name:      LightspeedStackConfig,
 				MountPath: LightspeedStackInitContainerMountPath,
 				SubPath:   LightspeedStackConfigCMKey,
+			},
+			{
+				Name:      TmpVolumeName,
+				MountPath: TmpVolumeMountPath,
 			},
 		},
 	})
