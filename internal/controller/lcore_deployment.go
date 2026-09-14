@@ -264,7 +264,13 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 				FailureThreshold: MCPServerProbeFailureThreshold,
 			},
 			ImagePullPolicy: corev1.PullIfNotPresent,
-			SecurityContext: containerSecurityContext,
+			SecurityContext: &corev1.SecurityContext{
+				RunAsNonRoot:             toPtr(true),
+				AllowPrivilegeEscalation: toPtr(false),
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
+				},
+			},
 		}
 		containers = append(containers, mcpContainer)
 	}

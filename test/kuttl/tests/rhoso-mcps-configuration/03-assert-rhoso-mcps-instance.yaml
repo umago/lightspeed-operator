@@ -23,6 +23,11 @@ spec:
               memory: 64Mi
             limits:
               memory: 200Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: openstack-config-secret
               mountPath: /app/secure.yaml
@@ -37,6 +42,8 @@ spec:
             - name: mcp-config
               mountPath: /app/config.yaml
               subPath: config.yaml
+            - name: tmp-writable-volume
+              mountPath: /tmp
 status:
   replicas: 1
   readyReplicas: 1
