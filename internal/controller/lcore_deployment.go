@@ -69,6 +69,14 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 		ReadOnly:  true,
 	})
 
+	containerSecurityContext := &corev1.SecurityContext{
+		RunAsNonRoot:             toPtr(true),
+		AllowPrivilegeEscalation: toPtr(false),
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{"ALL"},
+		},
+	}
+
 	llamaStackContainer := corev1.Container{
 		Name:         "llama-stack",
 		Image:        apiv1beta1.OpenStackLightspeedDefaultValues.LCoreImageURL,
@@ -111,6 +119,7 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 		},
 		Resources:       instance.Spec.Resources.LlamaStack,
 		ImagePullPolicy: corev1.PullIfNotPresent,
+		SecurityContext: containerSecurityContext,
 	}
 
 	// Data collection volumes (shared folder + exporter config)
@@ -147,6 +156,7 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 		ReadinessProbe:  buildLightspeedStackReadinessProbe(),
 		Resources:       instance.Spec.Resources.LightspeedService,
 		ImagePullPolicy: corev1.PullIfNotPresent,
+		SecurityContext: containerSecurityContext,
 	}
 	containers := []corev1.Container{llamaStackContainer, lightspeedStackContainer}
 
@@ -188,6 +198,7 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 					corev1.ResourceMemory: resource.MustParse("200Mi"),
 				},
 			},
+			SecurityContext: containerSecurityContext,
 		}
 		containers = append(containers, exporterContainer)
 	}
@@ -218,6 +229,7 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 				FailureThreshold: MCPServerProbeFailureThreshold,
 			},
 			ImagePullPolicy: corev1.PullIfNotPresent,
+			SecurityContext: containerSecurityContext,
 		}
 		containers = append(containers, mcpContainer)
 	}
@@ -246,6 +258,12 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 			Annotations: annotations,
 		},
 		Spec: corev1.PodSpec{
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: toPtr(true),
+				SeccompProfile: &corev1.SeccompProfile{
+					Type: corev1.SeccompProfileTypeRuntimeDefault,
+				},
+			},
 			ServiceAccountName: OpenStackLightspeedAppServerServiceAccountName,
 			InitContainers:     initContainers,
 			Containers:         containers,
@@ -262,8 +280,8 @@ func buildLCorePodTemplateSpec(ctx context.Context, h *common_helper.Helper, ins
 // (1) assets/vector_database_collect.sh and (2) assets/vector_database_build.py.
 func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources corev1.ResourceRequirements) []corev1.Container {
 	securityContext := &corev1.SecurityContext{
-		RunAsNonRoot:             &[]bool{true}[0],
-		AllowPrivilegeEscalation: &[]bool{false}[0],
+		RunAsNonRoot:             toPtr(true),
+		AllowPrivilegeEscalation: toPtr(false),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{"ALL"},
 		},

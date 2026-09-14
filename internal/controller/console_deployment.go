@@ -79,6 +79,7 @@ func buildConsoleDeploymentSpec(consoleImage string, instance *apiv1beta1.OpenSt
 						Image: consoleImage,
 						SecurityContext: &corev1.SecurityContext{
 							AllowPrivilegeEscalation: toPtr(false),
+							RunAsNonRoot:             toPtr(true),
 							ReadOnlyRootFilesystem:   toPtr(true),
 							Capabilities: &corev1.Capabilities{
 								Drop: []corev1.Capability{"ALL"},
@@ -112,6 +113,10 @@ func buildConsoleDeploymentSpec(consoleImage string, instance *apiv1beta1.OpenSt
 						ImagePullPolicy: corev1.PullAlways,
 						SecurityContext: &corev1.SecurityContext{
 							AllowPrivilegeEscalation: toPtr(false),
+							RunAsNonRoot:             toPtr(true),
+							Capabilities: &corev1.Capabilities{
+								Drop: []corev1.Capability{"ALL"},
+							},
 						},
 						Resources: consoleRes,
 						VolumeMounts: []corev1.VolumeMount{

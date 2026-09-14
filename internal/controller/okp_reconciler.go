@@ -123,6 +123,12 @@ func buildOKPPodTemplateSpec(instance *apiv1beta1.OpenStackLightspeed) corev1.Po
 			Labels: generateOKPSelectorLabels(),
 		},
 		Spec: corev1.PodSpec{
+			SecurityContext: &corev1.PodSecurityContext{
+				RunAsNonRoot: toPtr(true),
+				SeccompProfile: &corev1.SeccompProfile{
+					Type: corev1.SeccompProfileTypeRuntimeDefault,
+				},
+			},
 			AutomountServiceAccountToken: toPtr(false),
 			Containers: []corev1.Container{
 				{
@@ -152,6 +158,13 @@ func buildOKPPodTemplateSpec(instance *apiv1beta1.OpenStackLightspeed) corev1.Po
 					},
 					Resources:       instance.Spec.Resources.OKP,
 					ImagePullPolicy: corev1.PullIfNotPresent,
+					SecurityContext: &corev1.SecurityContext{
+						RunAsNonRoot:             toPtr(true),
+						AllowPrivilegeEscalation: toPtr(false),
+						Capabilities: &corev1.Capabilities{
+							Drop: []corev1.Capability{"ALL"},
+						},
+					},
 				},
 			},
 		},
