@@ -603,10 +603,9 @@ func addCABundleVolumesAndMounts(volumes *[]corev1.Volume, mounts *[]corev1.Volu
 func buildOGXEnvVars(ctx context.Context, h *common_helper.Helper, instance *apiv1beta1.OpenStackLightspeed) ([]corev1.EnvVar, error) {
 	envVars := []corev1.EnvVar{}
 
-	{
-		provider := buildProvider(instance)
+	for _, provider := range buildProviders(instance) {
 		if provider.CredentialsSecret == "" {
-			return envVars, nil
+			continue
 		}
 
 		envVarName := providerNameToEnvVarName(provider.Name)
@@ -686,15 +685,12 @@ func buildOGXEnvVars(ctx context.Context, h *common_helper.Helper, instance *api
 				},
 			})
 
-			// For vLLM providers, also set the URL environment variable
-			// The vLLM adapter checks for VLLM_URL as a fallback if URL is not in config
-			if provider.Type == RHOAIVLLMProviderName || provider.Type == RHELAIVLLMProviderName {
-				if provider.URL != "" {
-					envVars = append(envVars, corev1.EnvVar{
-						Name:  "VLLM_URL",
-						Value: provider.URL,
-					})
-				}
+			// For vLLM providers, also set provider-specific URL environment variable
+			if (provider.Type == RHOAIVLLMProviderName || provider.Type == RHELAIVLLMProviderName) && provider.URL != "" {
+				envVars = append(envVars, corev1.EnvVar{
+					Name:  envVarName + "_URL",
+					Value: provider.URL,
+				})
 			}
 		}
 	}

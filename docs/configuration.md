@@ -8,20 +8,21 @@ field in its `spec`.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `llmEndpoint` | Yes | URL of the LLM endpoint (e.g. `https://api.openai.com/v1`). Must start with `http://` or `https://`. |
-| `llmEndpointType` | Yes | Provider type. See {ref}`supported-providers`. |
-| `modelName` | Yes | Model name to use at `llmEndpoint`. |
-| `llmCredentials` | Yes | `Secret` name (same namespace) with the API token under key `apitoken`. |
-| `tlsCACertBundle` | No | `ConfigMap` name (same namespace) with a CA bundle for the LLM endpoint. |
-| `maxTokensForResponse` | No | Max response tokens. Minimum `1`. Defaults to `2048`. |
-| `llmProjectID` | No | Required by some providers (e.g. WatsonX). |
-| `llmDeploymentName` | No | Required by some providers (e.g. Azure OpenAI). |
-| `llmAPIVersion` | No | Required by some providers (e.g. Azure OpenAI). |
-| `feedbackEnabled` | No | User feedback collection. Defaults to `true`. |
-| `transcriptsEnabled` | No | Conversation transcript collection. Defaults to `false`. |
+| `lightspeed.defaultModel` | Yes | Default model alias selected for inference. Must match one of `models[].name`. |
+| `models` | Yes | List of configured models. Must contain at least one entry. |
+| `models[].name` | Yes | Kubernetes-style model alias (used by `lightspeed.defaultModel`). |
+| `models[].llmEndpoint` | Yes | URL of the LLM endpoint (e.g. `https://api.openai.com/v1`). Must start with `http://` or `https://`. |
+| `models[].llmEndpointType` | Yes | Provider type. See {ref}`supported-providers`. |
+| `models[].llmCredentials` | Yes | `Secret` name (same namespace) with the API token under key `apitoken`. |
+| `models[].modelName` | Yes | Provider-native model name to use at the configured endpoint. |
+| `models[].maxTokensForResponse` | No | Max response tokens for this model. Minimum `1`. Defaults to `2048`. |
+| `models[].llmProjectID` | No | Required by some providers (e.g. WatsonX). |
+| `models[].llmDeploymentName` | No | Required by some providers (e.g. Azure OpenAI). |
+| `models[].llmAPIVersion` | No | Required by some providers (e.g. Azure OpenAI). |
+| `tlsCACertBundle` | No | `ConfigMap` name (same namespace) with a CA bundle used by all model endpoints. |
 
 (supported-providers)=
-## Supported LLM providers (`llmEndpointType`)
+## Supported LLM providers (`models[].llmEndpointType`)
 
 - `openai` — OpenAI-compatible endpoints (Ollama, vLLM, etc.)
 - `azure_openai` — Azure OpenAI (needs `llmDeploymentName`, `llmAPIVersion`)
@@ -32,7 +33,7 @@ field in its `spec`.
 
 > [!TIP]
 > This list grows over time. Check
-> `oc explain openstacklightspeed.spec.llmEndpointType` on your cluster
+> `oc explain openstacklightspeed.spec.models.llmEndpointType` on your cluster
 > for the current, authoritative list.
 
 ## Logging (`logging`)

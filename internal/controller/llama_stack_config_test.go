@@ -23,53 +23,57 @@ func getOpenStackLightspeedProvidersInstance(provider string) *apiv1beta1.OpenSt
 			Name:      "openstack-lightspeed",
 			Namespace: "openstack-lightspeed",
 		},
+		Spec: apiv1beta1.OpenStackLightspeedSpec{
+			OpenStackLightspeedCore: apiv1beta1.OpenStackLightspeedCore{
+				Lightspeed: apiv1beta1.OpenStackLightspeedConfigSpec{DefaultModel: "default-model"},
+			},
+		},
+	}
+
+	model := apiv1beta1.OpenStackLightspeedModelSpec{
+		Name:      "default-model",
+		ModelName: "gpt-4o",
 	}
 
 	switch provider {
 	case OpenAIProviderName:
-		instance.Spec.LLMEndpointType = OpenAIProviderName
-		instance.Spec.LLMEndpoint = "https://api.openai.com/v1"
-		instance.Spec.ModelName = "gpt-4o"
-		return instance
+		model.LLMEndpointType = OpenAIProviderName
+		model.LLMEndpoint = "https://api.openai.com/v1"
 	case GeminiProviderName:
-		instance.Spec.LLMEndpointType = GeminiProviderName
-		instance.Spec.ModelName = "gemini-2.0-flash"
-		return instance
+		model.LLMEndpointType = GeminiProviderName
+		model.ModelName = "gemini-2.0-flash"
 	case RHOAIVLLMProviderName:
-		instance.Spec.LLMEndpointType = RHOAIVLLMProviderName
-		instance.Spec.LLMEndpoint = "https://vllm.example.com/v1"
-		instance.Spec.ModelName = "meta-llama/Llama-3.1-70B-Instruct"
-		return instance
+		model.LLMEndpointType = RHOAIVLLMProviderName
+		model.LLMEndpoint = "https://vllm.example.com/v1"
+		model.ModelName = "meta-llama/Llama-3.1-70B-Instruct"
 	case RHELAIVLLMProviderName:
-		instance.Spec.LLMEndpointType = RHELAIVLLMProviderName
-		instance.Spec.LLMEndpoint = "https://rhelai-vllm.example.com/v1"
-		instance.Spec.ModelName = "meta-llama/Llama-3.1-70B-Instruct"
-		return instance
+		model.LLMEndpointType = RHELAIVLLMProviderName
+		model.LLMEndpoint = "https://rhelai-vllm.example.com/v1"
+		model.ModelName = "meta-llama/Llama-3.1-70B-Instruct"
 	case AzureOpenAIProviderName:
-		instance.Spec.LLMEndpointType = AzureOpenAIProviderName
-		instance.Spec.LLMEndpoint = "https://my-resource.openai.azure.com"
-		instance.Spec.LLMDeploymentName = "gpt-4o-deployment"
-		instance.Spec.LLMAPIVersion = "2024-02-01"
-		instance.Spec.ModelName = "gpt-4o"
-		return instance
+		model.LLMEndpointType = AzureOpenAIProviderName
+		model.LLMEndpoint = "https://my-resource.openai.azure.com"
+		model.LLMDeploymentName = "gpt-4o-deployment"
+		model.LLMAPIVersion = "2024-02-01"
 	case WatsonXProviderName:
-		instance.Spec.LLMEndpointType = WatsonXProviderName
-		instance.Spec.LLMEndpoint = "https://watsonx.example.com"
-		instance.Spec.LLMProjectID = "test-project-id"
-		instance.Spec.ModelName = "ibm/granite-13b-chat-v2"
-		return instance
+		model.LLMEndpointType = WatsonXProviderName
+		model.LLMEndpoint = "https://watsonx.example.com"
+		model.LLMProjectID = "test-project-id"
+		model.ModelName = "ibm/granite-13b-chat-v2"
 	default:
 		ginkgo.Fail(fmt.Sprintf("Unknown provider %s", provider))
+		return nil
 	}
 
-	return nil
+	instance.Spec.Models = []apiv1beta1.OpenStackLightspeedModelSpec{model}
+	return instance
 }
 
-func checkModelCommonConfig(modelConfig map[string]interface{}, instance *apiv1beta1.OpenStackLightspeed) {
-	gomega.Expect(modelConfig["model_id"]).To(gomega.Equal(instance.Spec.ModelName))
+func checkModelCommonConfig(modelConfig map[string]interface{}, model apiv1beta1.OpenStackLightspeedModelSpec) {
+	gomega.Expect(modelConfig["model_id"]).To(gomega.Equal(model.Name))
 	gomega.Expect(modelConfig["model_type"]).To(gomega.Equal("llm"))
-	gomega.Expect(modelConfig["provider_id"]).To(gomega.Equal(OpenStackLightspeedDefaultProvider))
-	gomega.Expect(modelConfig["provider_model_id"]).To(gomega.Equal(instance.Spec.ModelName))
+	gomega.Expect(modelConfig["provider_id"]).To(gomega.Equal(modelProviderName(model.Name)))
+	gomega.Expect(modelConfig["provider_model_id"]).To(gomega.Equal(model.ModelName))
 	gomega.Expect(modelConfig).NotTo(gomega.HaveKey("metadata"))
 }
 
@@ -86,45 +90,45 @@ var _ = ginkgo.Describe("OGX config", func() {
 				expectSentenceTransformersProvider(inferenceProvidersConfig)
 
 				inferenceProvider := inferenceProvidersConfig[1].(map[string]interface{})
-				gomega.Expect(inferenceProvider["provider_id"]).To(gomega.Equal(OpenStackLightspeedDefaultProvider))
+				gomega.Expect(inferenceProvider["provider_id"]).To(gomega.Equal(modelProviderName("default-model")))
 				gomega.Expect(inferenceProvider["provider_type"]).To(gomega.Equal(providerType))
 
 				checkConfig(inferenceProvider["config"].(map[string]interface{}), instance)
 			},
 			ginkgo.Entry("for openai", OpenAIProviderName, "remote::openai",
 				func(config map[string]interface{}, _ *apiv1beta1.OpenStackLightspeed) {
-					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_API_KEY}"))
+					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_API_KEY}"))
 				}),
 			ginkgo.Entry("for gemini", GeminiProviderName, "remote::gemini",
 				func(config map[string]interface{}, _ *apiv1beta1.OpenStackLightspeed) {
-					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_API_KEY}"))
+					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_API_KEY}"))
 					gomega.Expect(config).NotTo(gomega.HaveKey("base_url"))
 				}),
 			ginkgo.Entry("for rhoai_vllm", RHOAIVLLMProviderName, "remote::vllm",
 				func(config map[string]interface{}, instance *apiv1beta1.OpenStackLightspeed) {
-					gomega.Expect(config["api_token"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_API_KEY}"))
-					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.LLMEndpoint))
+					gomega.Expect(config["api_token"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_API_KEY}"))
+					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.Models[0].LLMEndpoint))
 				}),
 			ginkgo.Entry("for rhelai_vllm", RHELAIVLLMProviderName, "remote::vllm",
 				func(config map[string]interface{}, instance *apiv1beta1.OpenStackLightspeed) {
-					gomega.Expect(config["api_token"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_API_KEY}"))
-					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.LLMEndpoint))
+					gomega.Expect(config["api_token"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_API_KEY}"))
+					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.Models[0].LLMEndpoint))
 				}),
 			ginkgo.Entry("for azure_openai", AzureOpenAIProviderName, "remote::azure",
 				func(config map[string]interface{}, instance *apiv1beta1.OpenStackLightspeed) {
-					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_API_KEY}"))
-					gomega.Expect(config["client_id"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_CLIENT_ID:=}"))
-					gomega.Expect(config["tenant_id"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_TENANT_ID:=}"))
-					gomega.Expect(config["client_secret"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_CLIENT_SECRET:=}"))
-					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.LLMEndpoint))
-					gomega.Expect(config["deployment_name"]).To(gomega.Equal(instance.Spec.LLMDeploymentName))
-					gomega.Expect(config["api_version"]).To(gomega.Equal(instance.Spec.LLMAPIVersion))
+					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_API_KEY}"))
+					gomega.Expect(config["client_id"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_CLIENT_ID:=}"))
+					gomega.Expect(config["tenant_id"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_TENANT_ID:=}"))
+					gomega.Expect(config["client_secret"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_CLIENT_SECRET:=}"))
+					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.Models[0].LLMEndpoint))
+					gomega.Expect(config["deployment_name"]).To(gomega.Equal(instance.Spec.Models[0].LLMDeploymentName))
+					gomega.Expect(config["api_version"]).To(gomega.Equal(instance.Spec.Models[0].LLMAPIVersion))
 				}),
 			ginkgo.Entry("for watsonx", WatsonXProviderName, "remote::watsonx",
 				func(config map[string]interface{}, instance *apiv1beta1.OpenStackLightspeed) {
-					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.LLMEndpoint))
-					gomega.Expect(config["project_id"]).To(gomega.Equal(instance.Spec.LLMProjectID))
-					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_API_KEY}"))
+					gomega.Expect(config["base_url"]).To(gomega.Equal(instance.Spec.Models[0].LLMEndpoint))
+					gomega.Expect(config["project_id"]).To(gomega.Equal(instance.Spec.Models[0].LLMProjectID))
+					gomega.Expect(config["api_key"]).To(gomega.Equal("${env.OPENSTACK_LIGHTSPEED_PROVIDER_DEFAULT_MODEL_API_KEY}"))
 				}),
 		)
 	})
@@ -138,7 +142,7 @@ var _ = ginkgo.Describe("OGX config", func() {
 				gomega.Expect(modelsConfig).To(gomega.HaveLen(2))
 
 				modelConfig := modelsConfig[0].(map[string]interface{})
-				checkModelCommonConfig(modelConfig, instance)
+				checkModelCommonConfig(modelConfig, instance.Spec.Models[0])
 
 				okpModel := modelsConfig[1].(map[string]interface{})
 				gomega.Expect(okpModel["model_id"]).To(gomega.Equal("solr_embedding"))

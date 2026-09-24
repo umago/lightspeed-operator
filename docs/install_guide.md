@@ -126,9 +126,10 @@ the next step.
 
 ## Deploying OpenStackLightspeed
 
-At minimum, set `llmEndpoint`, `llmEndpointType`, `modelName`, and
+At minimum, set `lightspeed.defaultModel` and one entry in `models[]`
+with `llmEndpoint`, `llmEndpointType`, `modelName`, and
 `llmCredentials` — see {doc}`configuration` for the full list of
-supported `llmEndpointType` values and everything else:
+supported `models[].llmEndpointType` values and everything else:
 
 ```yaml
 apiVersion: lightspeed.openstack.org/v1beta1
@@ -137,11 +138,15 @@ metadata:
   name: openstack-lightspeed
   namespace: openstack-lightspeed
 spec:
-  llmEndpoint: https://<llm-provider-host>:<port>/v1
-  llmEndpointType: <provider-type>
-  llmCredentials: openstack-lightspeed-apitoken
-  modelName: <model-name>
   tlsCACertBundle: openstack-lightspeed-certs # optional
+  lightspeed:
+    defaultModel: my-model
+  models:
+    - name: my-model
+      llmEndpoint: https://<llm-provider-host>:<port>/v1
+      llmEndpointType: <provider-type>
+      llmCredentials: openstack-lightspeed-apitoken
+      modelName: <model-name>
 ```
 
 This deploys the full stack: the AI engine (lightspeed-stack and

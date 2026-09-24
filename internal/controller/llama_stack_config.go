@@ -110,9 +110,7 @@ func buildOGXInferenceProviders(_ context.Context, _ *common_helper.Helper, inst
 		},
 	}
 
-	// Add the LLM provider from the instance spec
-	{
-		provider := buildProvider(instance)
+	for _, provider := range buildProviders(instance) {
 		providerConfig := map[string]interface{}{
 			"provider_id": provider.Name,
 		}
@@ -338,28 +336,24 @@ func buildOGXStorage(_ *common_helper.Helper, instance *apiv1beta1.OpenStackLigh
 
 func buildOGXModels(_ *common_helper.Helper, instance *apiv1beta1.OpenStackLightspeed) []interface{} {
 	models := []interface{}{}
-	// Add LLM models from the instance spec
-	{
-		provider := buildProvider(instance)
-		for _, model := range provider.Models {
-			modelConfig := map[string]interface{}{
-				"model_id":          model.Name,
-				"model_type":        "llm",
-				"provider_id":       provider.Name,
-				"provider_model_id": model.Name,
-			}
-
-			// Add model-specific metadata if available
-			metadata := map[string]interface{}{}
-			if model.MaxTokensForResponse > 0 {
-				metadata["max_tokens"] = model.MaxTokensForResponse
-			}
-			if len(metadata) > 0 {
-				modelConfig["metadata"] = metadata
-			}
-
-			models = append(models, modelConfig)
+	for _, modelSpec := range instance.Spec.Models {
+		modelConfig := map[string]interface{}{
+			"model_id":          modelSpec.Name,
+			"model_type":        "llm",
+			"provider_id":       modelProviderName(modelSpec.Name),
+			"provider_model_id": modelSpec.ModelName,
 		}
+
+		// Add model-specific metadata if available
+		metadata := map[string]interface{}{}
+		if modelSpec.MaxTokensForResponse > 0 {
+			metadata["max_tokens"] = modelSpec.MaxTokensForResponse
+		}
+		if len(metadata) > 0 {
+			modelConfig["metadata"] = metadata
+		}
+
+		models = append(models, modelConfig)
 	}
 
 	models = append(models, map[string]interface{}{

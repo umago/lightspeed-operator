@@ -57,13 +57,17 @@ func makeContainerImageTestInstance() *apiv1beta1.OpenStackLightspeed {
 		},
 		Spec: apiv1beta1.OpenStackLightspeedSpec{
 			OpenStackLightspeedCore: apiv1beta1.OpenStackLightspeedCore{
-				LLMEndpoint:     "http://mock-llm:8000/v1",
-				LLMEndpointType: "openai",
-				ModelName:       "test-model",
-				LLMCredentials:  "llm-secret",
-				RAG:             &apiv1beta1.RAG{ContainerImage: testRAGImage},
-				OGX:             &apiv1beta1.OGXSpec{ContainerImage: testOGXImage},
-				LCore:           &apiv1beta1.LCoreSpec{ContainerImage: testLightspeedImage},
+				Lightspeed: apiv1beta1.OpenStackLightspeedConfigSpec{DefaultModel: "test-model"},
+				Models: []apiv1beta1.OpenStackLightspeedModelSpec{{
+					Name:            "test-model",
+					LLMEndpoint:     "http://mock-llm:8000/v1",
+					LLMEndpointType: "openai",
+					LLMCredentials:  "llm-secret",
+					ModelName:       "test-model",
+				}},
+				RAG:   &apiv1beta1.RAG{ContainerImage: testRAGImage},
+				OGX:   &apiv1beta1.OGXSpec{ContainerImage: testOGXImage},
+				LCore: &apiv1beta1.LCoreSpec{ContainerImage: testLightspeedImage},
 				DataverseExporter: &apiv1beta1.DataverseExporter{
 					ContainerImage: testExporterImage,
 					Feedback:       &apiv1beta1.DataverseExporterFeedback{Enabled: &feedbackDisabled},

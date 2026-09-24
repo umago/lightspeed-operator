@@ -61,23 +61,31 @@ type lcoreModel struct {
 	MaxTokensForResponse int
 }
 
-// buildProvider creates an lcoreProvider from an OpenStackLightspeed instance.
-func buildProvider(instance *apiv1beta1.OpenStackLightspeed) lcoreProvider {
-	return lcoreProvider{
-		Name:              OpenStackLightspeedDefaultProvider,
-		URL:               instance.Spec.LLMEndpoint,
-		Type:              instance.Spec.LLMEndpointType,
-		CredentialsSecret: instance.Spec.LLMCredentials,
-		Models: []lcoreModel{
-			{
-				Name:                 instance.Spec.ModelName,
-				MaxTokensForResponse: instance.Spec.MaxTokensForResponse,
+func modelProviderName(modelName string) string {
+	return fmt.Sprintf("%s-%s", OpenStackLightspeedDefaultProvider, modelName)
+}
+
+// buildProviders creates lcore providers from an OpenStackLightspeed instance.
+func buildProviders(instance *apiv1beta1.OpenStackLightspeed) []lcoreProvider {
+	providers := make([]lcoreProvider, 0, len(instance.Spec.Models))
+	for _, model := range instance.Spec.Models {
+		providers = append(providers, lcoreProvider{
+			Name:              modelProviderName(model.Name),
+			URL:               model.LLMEndpoint,
+			Type:              model.LLMEndpointType,
+			CredentialsSecret: model.LLMCredentials,
+			Models: []lcoreModel{
+				{
+					Name:                 model.ModelName,
+					MaxTokensForResponse: model.MaxTokensForResponse,
+				},
 			},
-		},
-		AzureDeploymentName: instance.Spec.LLMDeploymentName,
-		APIVersion:          instance.Spec.LLMAPIVersion,
-		WatsonProjectID:     instance.Spec.LLMProjectID,
+			AzureDeploymentName: model.LLMDeploymentName,
+			APIVersion:          model.LLMAPIVersion,
+			WatsonProjectID:     model.LLMProjectID,
+		})
 	}
+	return providers
 }
 
 func buildLCoreServiceConfig(_ *common_helper.Helper, _ *apiv1beta1.OpenStackLightspeed) map[string]interface{} {
@@ -125,8 +133,8 @@ func buildLCoreAuthenticationConfig(_ *common_helper.Helper, _ *apiv1beta1.OpenS
 
 func buildLCoreInferenceConfig(_ *common_helper.Helper, instance *apiv1beta1.OpenStackLightspeed) map[string]interface{} {
 	return map[string]interface{}{
-		"default_provider": OpenStackLightspeedDefaultProvider,
-		"default_model":    instance.Spec.ModelName,
+		"default_provider": modelProviderName(instance.Spec.Lightspeed.DefaultModel),
+		"default_model":    instance.Spec.Lightspeed.DefaultModel,
 	}
 }
 

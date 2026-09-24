@@ -109,26 +109,19 @@ spec:
           standard Python log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL.'
         displayName: Lightspeed Stack Log Level
         path: lcore.logLevel
-      - description: |-
-          Secret name containing API token for the LLMEndpoint. The secret must contain
-          a field named "apitoken" which holds the token value.
-        displayName: LLM Credentials Secret
-        path: llmCredentials
-      - description: URL pointing to the LLM
-        displayName: LLM Endpoint
-        path: llmEndpoint
-      - description: Type of the provider serving the LLM
-        displayName: Provider Type
-        path: llmEndpointType
-      - description: Name of the model to use at the API endpoint provided in LLMEndpoint
-        displayName: Model Name
-        path: modelName
+      - description: DefaultModel is the model alias selected by default for inference.
+        displayName: Default Model
+        path: lightspeed.defaultModel
+      - description: Name is the Kubernetes-style alias for this configured model.
+        displayName: Model Alias
+        path: models[0].name
       - description: Log level configuration for the OGX container. Supports standard
           levels (INFO, DEBUG) or fine-grained control using format "component=level,component=level"
           (e.g., "core=debug,providers=info").
         displayName: OGX Log Level
         path: ogx.logLevel
-      - description: Configmap name containing a CA Certificates bundle
+      - description: ConfigMap name containing a CA certificates bundle used for all
+          configured models.
         displayName: TLS CA Certificate Bundle
         path: tlsCACertBundle
       version: v1beta1

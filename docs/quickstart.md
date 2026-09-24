@@ -35,10 +35,14 @@ metadata:
   name: openstack-lightspeed
   namespace: openstack-lightspeed
 spec:
-  llmEndpoint: https://<llm-provider-host>:<port>/v1
-  llmEndpointType: <provider-type>
-  llmCredentials: openstack-lightspeed-apitoken
-  modelName: <model-name>
+  lightspeed:
+    defaultModel: my-model
+  models:
+    - name: my-model
+      llmEndpoint: https://<llm-provider-host>:<port>/v1
+      llmEndpointType: <provider-type>
+      llmCredentials: openstack-lightspeed-apitoken
+      modelName: <model-name>
 ```
 
 Then apply both:

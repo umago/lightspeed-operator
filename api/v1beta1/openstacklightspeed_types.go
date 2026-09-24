@@ -338,52 +338,76 @@ type DataverseExporter struct {
 	ContainerImage string `json:"containerImage,omitempty"`
 }
 
-// OpenStackLightspeedCore defines the desired state of OpenStackLightspeed
-type OpenStackLightspeedCore struct {
+// OpenStackLightspeedModelSpec defines one selectable LLM model.
+type OpenStackLightspeedModelSpec struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Model Alias"
+	// Name is the Kubernetes-style alias for this configured model.
+	Name string `json:"name"`
+
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Pattern=`^https?://.+`
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="LLM Endpoint"
-	// URL pointing to the LLM
+	// URL pointing to the LLM endpoint.
 	LLMEndpoint string `json:"llmEndpoint"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=azure_openai;openai;watsonx;rhoai_vllm;rhelai_vllm;gemini
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Provider Type"
-	// Type of the provider serving the LLM
+	// Type of the provider serving the LLM.
 	LLMEndpointType string `json:"llmEndpointType"`
 
 	// +kubebuilder:validation:Required
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Model Name"
-	// Name of the model to use at the API endpoint provided in LLMEndpoint
-	ModelName string `json:"modelName"`
-
-	// +kubebuilder:validation:Required
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="LLM Credentials Secret"
-	// Secret name containing API token for the LLMEndpoint. The secret must contain
-	// a field named "apitoken" which holds the token value.
+	// Secret name containing API token for the LLM endpoint.
+	// The secret must contain a field named "apitoken" which holds the token value.
 	LLMCredentials string `json:"llmCredentials"`
 
-	// +kubebuilder:validation:Optional
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="TLS CA Certificate Bundle"
-	// Configmap name containing a CA Certificates bundle
-	TLSCACertBundle string `json:"tlsCACertBundle"`
+	// +kubebuilder:validation:Required
+	// Model name to use at the API endpoint provided in llmEndpoint.
+	ModelName string `json:"modelName"`
 
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Minimum=1
-	// MaxTokensForResponse defines the maximum number of tokens to be used for the response generation
+	// MaxTokensForResponse defines the maximum number of tokens to be used for response generation.
 	MaxTokensForResponse int `json:"maxTokensForResponse,omitempty"`
 
 	// +kubebuilder:validation:Optional
-	// Project ID for LLM providers that require it (e.g., WatsonX)
+	// Project ID for LLM providers that require it (e.g., WatsonX).
 	LLMProjectID string `json:"llmProjectID,omitempty"`
 
 	// +kubebuilder:validation:Optional
-	// Deployment name for LLM providers that require it (e.g., Microsoft Azure OpenAI)
+	// Deployment name for LLM providers that require it (e.g., Microsoft Azure OpenAI).
 	LLMDeploymentName string `json:"llmDeploymentName,omitempty"`
 
 	// +kubebuilder:validation:Optional
-	// LLM API Version for LLM providers that require it (e.g., Microsoft Azure OpenAI)
+	// LLM API version for LLM providers that require it (e.g., Microsoft Azure OpenAI).
 	LLMAPIVersion string `json:"llmAPIVersion,omitempty"`
+}
+
+// OpenStackLightspeedConfigSpec defines top-level lightspeed behavior.
+type OpenStackLightspeedConfigSpec struct {
+	// +kubebuilder:validation:Required
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Default Model"
+	// DefaultModel is the model alias selected by default for inference.
+	DefaultModel string `json:"defaultModel"`
+}
+
+// OpenStackLightspeedCore defines the desired state of OpenStackLightspeed
+type OpenStackLightspeedCore struct {
+	// +kubebuilder:validation:Required
+	// Lightspeed configures top-level model selection behavior.
+	Lightspeed OpenStackLightspeedConfigSpec `json:"lightspeed"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	// +listType=map
+	// +listMapKey=name
+	// Models configures available LLM models.
+	Models []OpenStackLightspeedModelSpec `json:"models"`
+
+	// +kubebuilder:validation:Optional
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="TLS CA Certificate Bundle"
+	// ConfigMap name containing a CA certificates bundle used for all configured models.
+	TLSCACertBundle string `json:"tlsCACertBundle,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}

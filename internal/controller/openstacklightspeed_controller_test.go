@@ -54,9 +54,14 @@ var _ = ginkgo.Describe("OpenStackLightspeed Controller", func() {
 					},
 					Spec: apiv1beta1.OpenStackLightspeedSpec{
 						OpenStackLightspeedCore: apiv1beta1.OpenStackLightspeedCore{
-							LLMEndpoint:     "https://example.com/llm",
-							LLMEndpointType: OpenAIProviderName,
-							ModelName:       "test-model",
+							Lightspeed: apiv1beta1.OpenStackLightspeedConfigSpec{DefaultModel: "test-model"},
+							Models: []apiv1beta1.OpenStackLightspeedModelSpec{{
+								Name:            "test-model",
+								LLMEndpoint:     "https://example.com/llm",
+								LLMEndpointType: OpenAIProviderName,
+								LLMCredentials:  "test-llm-credentials",
+								ModelName:       "test-model",
+							}},
 						},
 					},
 				}

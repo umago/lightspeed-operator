@@ -23,8 +23,8 @@ oc logs -n <namespace> deploy/lightspeed-stack-deployment -c lightspeed-service-
 oc logs -n <namespace> deploy/lightspeed-stack-deployment -c ogx
 ```
 
-Usual causes: bad/unreachable `llmEndpoint`, invalid `apitoken`, or a
-missing `tlsCACertBundle` for a self-signed endpoint. ogx logs
+Usual causes: bad/unreachable `models[].llmEndpoint`, invalid `apitoken`,
+or a missing `tlsCACertBundle` for a self-signed endpoint. ogx logs
 the actual auth/TLS error from the provider.
 
 ### PostgreSQL pod not starting

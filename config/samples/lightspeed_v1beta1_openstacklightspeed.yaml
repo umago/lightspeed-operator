@@ -6,11 +6,15 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: openstacklightspeed-sample
 spec:
-  llmEndpoint: http://llm_provider:11434/v1
-  llmEndpointType: openai
-  llmCredentials: openstack-lightspeed-apitoken
-  modelName: llama3.1:8b
   tlsCACertBundle: openstack-lightspeed-certs
+  lightspeed:
+    defaultModel: llama3-1-8b
+  models:
+    - name: llama3-1-8b
+      llmEndpoint: http://llm_provider:11434/v1
+      llmEndpointType: openai
+      llmCredentials: openstack-lightspeed-apitoken
+      modelName: llama3.1:8b
   # Uncomment to override container images (falls back to operator defaults when unset):
   # rag:
   #   containerImage: quay.io/openstack-lightspeed/rag-content:os-docs-2026.1-ogx

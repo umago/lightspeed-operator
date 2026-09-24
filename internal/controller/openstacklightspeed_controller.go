@@ -217,8 +217,17 @@ func (r *OpenStackLightspeedReconciler) Reconcile(ctx context.Context, req ctrl.
 		return ctrl.Result{}, nil
 	}
 
-	if instance.Spec.MaxTokensForResponse == 0 {
-		instance.Spec.MaxTokensForResponse = apiv1beta1.OpenStackLightspeedDefaultValues.MaxTokensForResponse
+	modelNames := map[string]struct{}{}
+	for i := range instance.Spec.Models {
+		if instance.Spec.Models[i].MaxTokensForResponse == 0 {
+			instance.Spec.Models[i].MaxTokensForResponse = apiv1beta1.OpenStackLightspeedDefaultValues.MaxTokensForResponse
+		}
+		modelNames[instance.Spec.Models[i].Name] = struct{}{}
+	}
+	if _, ok := modelNames[instance.Spec.Lightspeed.DefaultModel]; !ok {
+		err := fmt.Errorf("lightspeed.defaultModel %q does not match any spec.models[].name", instance.Spec.Lightspeed.DefaultModel)
+		Log.Error(err, "invalid model configuration")
+		return ctrl.Result{}, err
 	}
 
 	// Log dev config parse errors so misconfigurations don't silently disable features.

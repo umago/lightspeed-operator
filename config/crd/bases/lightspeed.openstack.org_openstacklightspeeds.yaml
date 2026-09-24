@@ -360,45 +360,79 @@ spec:
                         type: object
                     type: object
                 type: object
-              llmAPIVersion:
-                description: LLM API Version for LLM providers that require it (e.g.,
-                  Microsoft Azure OpenAI)
-                type: string
-              llmCredentials:
-                description: |-
-                  Secret name containing API token for the LLMEndpoint. The secret must contain
-                  a field named "apitoken" which holds the token value.
-                type: string
-              llmDeploymentName:
-                description: Deployment name for LLM providers that require it (e.g.,
-                  Microsoft Azure OpenAI)
-                type: string
-              llmEndpoint:
-                description: URL pointing to the LLM
-                pattern: ^https?://.+
-                type: string
-              llmEndpointType:
-                description: Type of the provider serving the LLM
-                enum:
-                - azure_openai
-                - openai
-                - watsonx
-                - rhoai_vllm
-                - rhelai_vllm
-                - gemini
-                type: string
-              llmProjectID:
-                description: Project ID for LLM providers that require it (e.g., WatsonX)
-                type: string
-              maxTokensForResponse:
-                description: MaxTokensForResponse defines the maximum number of tokens
-                  to be used for the response generation
-                minimum: 1
-                type: integer
-              modelName:
-                description: Name of the model to use at the API endpoint provided
-                  in LLMEndpoint
-                type: string
+              lightspeed:
+                description: Lightspeed configures top-level model selection behavior.
+                properties:
+                  defaultModel:
+                    description: DefaultModel is the model alias selected by default
+                      for inference.
+                    type: string
+                required:
+                - defaultModel
+                type: object
+              models:
+                description: Models configures available LLM models.
+                items:
+                  description: OpenStackLightspeedModelSpec defines one selectable
+                    LLM model.
+                  properties:
+                    llmAPIVersion:
+                      description: LLM API version for LLM providers that require
+                        it (e.g., Microsoft Azure OpenAI).
+                      type: string
+                    llmCredentials:
+                      description: |-
+                        Secret name containing API token for the LLM endpoint.
+                        The secret must contain a field named "apitoken" which holds the token value.
+                      type: string
+                    llmDeploymentName:
+                      description: Deployment name for LLM providers that require
+                        it (e.g., Microsoft Azure OpenAI).
+                      type: string
+                    llmEndpoint:
+                      description: URL pointing to the LLM endpoint.
+                      pattern: ^https?://.+
+                      type: string
+                    llmEndpointType:
+                      description: Type of the provider serving the LLM.
+                      enum:
+                      - azure_openai
+                      - openai
+                      - watsonx
+                      - rhoai_vllm
+                      - rhelai_vllm
+                      - gemini
+                      type: string
+                    llmProjectID:
+                      description: Project ID for LLM providers that require it (e.g.,
+                        WatsonX).
+                      type: string
+                    maxTokensForResponse:
+                      description: MaxTokensForResponse defines the maximum number
+                        of tokens to be used for response generation.
+                      minimum: 1
+                      type: integer
+                    modelName:
+                      description: Model name to use at the API endpoint provided
+                        in llmEndpoint.
+                      type: string
+                    name:
+                      description: Name is the Kubernetes-style alias for this configured
+                        model.
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                      type: string
+                  required:
+                  - llmCredentials
+                  - llmEndpoint
+                  - llmEndpointType
+                  - modelName
+                  - name
+                  type: object
+                minItems: 1
+                type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               ogx:
                 default: {}
                 description: OGX configures the OGX container.
@@ -660,13 +694,12 @@ spec:
                     type: string
                 type: object
               tlsCACertBundle:
-                description: Configmap name containing a CA Certificates bundle
+                description: ConfigMap name containing a CA certificates bundle used
+                  for all configured models.
                 type: string
             required:
-            - llmCredentials
-            - llmEndpoint
-            - llmEndpointType
-            - modelName
+            - lightspeed
+            - models
             type: object
           status:
             description: OpenStackLightspeedStatus defines the observed state of OpenStackLightspeed
