@@ -366,7 +366,13 @@ func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources
 		Command: []string{
 			"sh",
 			"-c",
-			"rm -rf " + OKPEmbeddingModelMountPath + " && mkdir -p " + OKPEmbeddingModelMountPath + " && cp -rL /opt/models/. " + OKPEmbeddingModelMountPath,
+			"rm -rf " + OKPEmbeddingModelMountPath + " && mkdir -p " + OKPEmbeddingModelMountPath + " " +
+				"&& cp -rL /opt/models/. " + OKPEmbeddingModelMountPath + " " +
+				"&& cp -L " + OKPEmbeddingsFilesMountPath + "/" + OKPEmbeddingsFileConfigJSONKey + " " + OKPEmbeddingModelMountPath + "/config.json " +
+				"&& cp -L " + OKPEmbeddingsFilesMountPath + "/" + OKPEmbeddingsFileModulesJSONKey + " " + OKPEmbeddingModelMountPath + "/modules.json " +
+				"&& cp -L " + OKPEmbeddingsFilesMountPath + "/" + OKPEmbeddingsFileTokenizerConfigJSONKey + " " + OKPEmbeddingModelMountPath + "/tokenizer_config.json " +
+				"&& mkdir -p " + OKPEmbeddingModelMountPath + "/1_Pooling " +
+				"&& cp -L " + OKPEmbeddingsFilesMountPath + "/" + OKPEmbeddingsFilePoolingConfigJSONKey + " " + OKPEmbeddingModelMountPath + "/1_Pooling/config.json",
 		},
 		SecurityContext: securityContext,
 		Resources:       initResources,
@@ -374,6 +380,11 @@ func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources
 			{
 				Name:      VectorDBVolumeName,
 				MountPath: VectorDBVolumeMountPath,
+			},
+			{
+				Name:      VectorDBScriptsVolumeName,
+				MountPath: OKPEmbeddingsFilesMountPath,
+				ReadOnly:  true,
 			},
 			{
 				Name:      TmpVolumeName,

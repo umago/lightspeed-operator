@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"embed"
 	_ "embed" // Required for go:embed directives in this package
 	"time"
 )
@@ -328,6 +329,16 @@ const (
 	// script is stored in the ConfigMap containing vector database init scripts.
 	VectorDBBuildScriptKey = "vector_database_build.py"
 
+	// OKPEmbeddingsFilesMountPath is the path where static OKP embedding helper files are mounted
+	// in the init container that assembles /vector-db-discovered-values/okp_embeddings_model.
+	OKPEmbeddingsFilesMountPath = "/okp-embeddings-files"
+
+	// ConfigMap keys for static files copied to okp_embeddings_model.
+	OKPEmbeddingsFileConfigJSONKey          = "okp_embeddings_config.json"
+	OKPEmbeddingsFileModulesJSONKey         = "okp_embeddings_modules.json"
+	OKPEmbeddingsFileTokenizerConfigJSONKey = "okp_embeddings_tokenizer_config.json" // #nosec G101 -- ConfigMap data key, not a credential
+	OKPEmbeddingsFilePoolingConfigJSONKey   = "okp_embeddings_1_pooling_config.json"
+
 	// -- Resource Version Annotation --------------------------------------------
 
 	// These constants define annotation keys used to track the resource versions of specific ConfigMaps.
@@ -458,6 +469,13 @@ var vectorDatabaseCollectScript string
 //
 //go:embed assets/vector_database_build.py
 var vectorDatabaseBuildScript string
+
+// okpEmbeddingsFilesDir embeds static files that must be copied alongside the OKP
+// embedding model into /vector-db-discovered-values/okp_embeddings_model.
+//
+//go:embed assets/okp_embeddings_files/*
+//go:embed assets/okp_embeddings_files/1_Pooling/*
+var okpEmbeddingsFilesDir embed.FS
 
 //go:embed assets/console_nginx.conf.tmpl
 var consoleNginxConfigTemplate string

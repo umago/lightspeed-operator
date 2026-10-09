@@ -299,6 +299,30 @@ func reconcileVectorDBScriptsConfigMap(ctx context.Context, h *common_helper.Hel
 			VectorDBBuildScriptKey:   vectorDatabaseBuildScript,
 		}
 
+		okpConfigJSON, err := okpEmbeddingsFilesDir.ReadFile("assets/okp_embeddings_files/config.json")
+		if err != nil {
+			return fmt.Errorf("failed to read embedded okp embeddings config.json: %w", err)
+		}
+		cm.Data[OKPEmbeddingsFileConfigJSONKey] = string(okpConfigJSON)
+
+		okpModulesJSON, err := okpEmbeddingsFilesDir.ReadFile("assets/okp_embeddings_files/modules.json")
+		if err != nil {
+			return fmt.Errorf("failed to read embedded okp embeddings modules.json: %w", err)
+		}
+		cm.Data[OKPEmbeddingsFileModulesJSONKey] = string(okpModulesJSON)
+
+		okpTokenizerConfigJSON, err := okpEmbeddingsFilesDir.ReadFile("assets/okp_embeddings_files/tokenizer_config.json")
+		if err != nil {
+			return fmt.Errorf("failed to read embedded okp embeddings tokenizer_config.json: %w", err)
+		}
+		cm.Data[OKPEmbeddingsFileTokenizerConfigJSONKey] = string(okpTokenizerConfigJSON)
+
+		okpPoolingConfigJSON, err := okpEmbeddingsFilesDir.ReadFile("assets/okp_embeddings_files/1_Pooling/config.json")
+		if err != nil {
+			return fmt.Errorf("failed to read embedded okp embeddings 1_Pooling/config.json: %w", err)
+		}
+		cm.Data[OKPEmbeddingsFilePoolingConfigJSONKey] = string(okpPoolingConfigJSON)
+
 		return controllerutil.SetControllerReference(h.GetBeforeObject(), cm, h.GetScheme())
 	})
 
