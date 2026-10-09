@@ -138,6 +138,13 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+        - name: okp-embeddings-model-collect
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
         - name: vector-database-config-build
           securityContext:
             allowPrivilegeEscalation: false

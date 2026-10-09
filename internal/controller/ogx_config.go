@@ -363,6 +363,7 @@ func buildOGXModels(_ *common_helper.Helper, instance *apiv1beta1.OpenStackLight
 		"provider_model_id": OKPEmbeddingModelMountPath,
 		"metadata": map[string]interface{}{
 			"embedding_dimension": 384,
+			"backend":             "onnx",
 		},
 	})
 

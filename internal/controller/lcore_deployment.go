@@ -340,7 +340,6 @@ func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources
 		Command: []string{
 			"sh", VectorDBScriptsMountPath + "/" + VectorDBCollectScriptKey,
 			"--vector-db-path", VectorDBVolumeMountPath,
-			"--enable-okp",
 		},
 		SecurityContext: securityContext,
 		Resources:       initResources,
@@ -353,6 +352,28 @@ func buildInitContainers(instance *apiv1beta1.OpenStackLightspeed, initResources
 				Name:      VectorDBScriptsVolumeName,
 				MountPath: VectorDBScriptsMountPath,
 				ReadOnly:  true,
+			},
+			{
+				Name:      TmpVolumeName,
+				MountPath: TmpVolumeMountPath,
+			},
+		},
+	})
+
+	containers = append(containers, corev1.Container{
+		Name:  "okp-embeddings-model-collect",
+		Image: instance.OKPContainerImage(),
+		Command: []string{
+			"sh",
+			"-c",
+			"rm -rf " + OKPEmbeddingModelMountPath + " && mkdir -p " + OKPEmbeddingModelMountPath + " && cp -rL /opt/models/. " + OKPEmbeddingModelMountPath,
+		},
+		SecurityContext: securityContext,
+		Resources:       initResources,
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      VectorDBVolumeName,
+				MountPath: VectorDBVolumeMountPath,
 			},
 			{
 				Name:      TmpVolumeName,

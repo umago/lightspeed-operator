@@ -49,6 +49,8 @@ spec:
       initContainers:
         - name: vector-database-collect
           image: quay.io/openstack-lightspeed/rag-content:os-docs-2026.1-ogx
+        - name: okp-embeddings-model-collect
+          image: registry.redhat.io/offline-knowledge-portal/rhokp-rhel9:1.3.0-1791487066
         - name: vector-database-config-build
           image: quay.io/lightspeed-core/lightspeed-stack:0.7.0rc3
       containers:

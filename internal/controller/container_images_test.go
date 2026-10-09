@@ -85,14 +85,17 @@ func TestBuildInitContainers_UsesContainerImageOverrides(t *testing.T) {
 	instance := makeContainerImageTestInstance()
 
 	initContainers := buildInitContainers(instance, corev1.ResourceRequirements{})
-	if len(initContainers) != 2 {
-		t.Fatalf("expected 2 init containers, got %d", len(initContainers))
+	if len(initContainers) != 3 {
+		t.Fatalf("expected 3 init containers, got %d", len(initContainers))
 	}
 
 	if got := initContainers[0].Image; got != testRAGImage {
 		t.Errorf("vector-database-collect image = %q, want %q", got, testRAGImage)
 	}
-	if got := initContainers[1].Image; got != testLightspeedImage {
+	if got := initContainers[1].Image; got != testOKPImage {
+		t.Errorf("okp-embeddings-model-collect image = %q, want %q", got, testOKPImage)
+	}
+	if got := initContainers[2].Image; got != testLightspeedImage {
 		t.Errorf("vector-database-config-build image = %q, want %q", got, testLightspeedImage)
 	}
 }
